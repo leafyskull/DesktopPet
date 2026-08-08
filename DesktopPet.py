@@ -34,33 +34,44 @@ class DesktopPet(QWidget):
             print("Error: Could not load sprite sheet.")
             sys.exit(1)
 
+        #### **** WALK ANIMATION **** ####
+
         # The current art I'm using is 32x32.
         self.frame_width = 32
         self.frame_height = 32
         self.resize(self.frame_width, self.frame_height)
 
-        # Placeholder frame from the sprite sheet
-        # TODO: Animations
-        row = 4
-        column = 0
-        x = column * self.frame_width
-        y = row * self.frame_height
-        frame = self.sprite_sheet.copy(x, y, self.frame_width, self.frame_height)
+        self.walk_frames = []
 
-        scale = 3
-        frame = frame.scaled(
-            self.frame_width * scale,
-            self.frame_height * scale,
-            Qt.KeepAspectRatio,
-            Qt.FastTransformation
-        )
+        # TODO: Animations
+        walk_start_row = 3
+        walk_start_column = 12
+
+        for column in range(4):
+            x = (walk_start_column + column) * self.frame_width
+            y = walk_start_row * self.frame_height
+
+            frame = self.sprite_sheet.copy(x, y, self.frame_width, self.frame_height)
+
+            scale = 3
+            frame = frame.scaled(
+                self.frame_width * scale,
+                self.frame_height * scale,
+                Qt.KeepAspectRatio,
+                Qt.FastTransformation
+            )
+
+            self.walk_frames.append(frame)
+
+        self.current_frame = 0
+
 
         # Make the window the same size as the image
         self.resize(self.frame_width * scale, self.frame_height * scale)
 
         self.pet_label = QLabel(self)
+        self.pet_label.setPixmap(self.walk_frames[self.current_frame])
         self.pet_label.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.pet_label.setPixmap(frame)
 
         # Keep the pet on top of other windows
         self.setWindowFlags(
@@ -76,15 +87,20 @@ class DesktopPet(QWidget):
 
         # Movement settings
         self.speed = 2
-        self.direction = 1 # | 1 = Right | -1 = Left |
+        self.direction = -1 # | 1 = Right | -1 = Left |
 
-        # Update timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_pet)
-        self.timer.start(30)  # Update every 30 ms
+        # Movement timer
+        self.movement_timer = QTimer(self)
+        self.movement_timer.timeout.connect(self.update_pet_position)
+        self.movement_timer.start(30)
+
+        # Animation timer
+        self.animation_timer = QTimer(self)
+        self.animation_timer.timeout.connect(self.update_animation)
+        self.animation_timer.start(150)
 
 
-    def update_pet(self):
+    def update_pet_position(self):
         """Update the pet's position and behavior."""
 
         if self.is_dragging: return  # Don't move if the pet is being dragged
@@ -107,6 +123,15 @@ class DesktopPet(QWidget):
             self.direction *= -1
 
         self.move(new_x, self.y())
+
+
+    def update_animation(self):
+        self.current_frame += 1
+
+        if self.current_frame >= len(self.walk_frames):
+            self.current_frame = 0
+
+        self.pet_label.setPixmap(self.walk_frames[self.current_frame])
 
 
     def mousePressEvent(self, event):
