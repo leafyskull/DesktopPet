@@ -23,9 +23,7 @@ class DesktopPet(QWidget):
         """Initialize the desktop pet."""
 
         super().__init__()
-
         self.name = name
-
         self.is_dragging = False
 
         # Load sprite sheet for the pet
@@ -34,18 +32,18 @@ class DesktopPet(QWidget):
             print("Error: Could not load sprite sheet.")
             sys.exit(1)
 
+
         #### **** WALK ANIMATION **** ####
 
-        # The current art I'm using is 32x32.
         self.frame_width = 32
         self.frame_height = 32
-        self.resize(self.frame_width, self.frame_height)
 
         self.walk_frames = []
 
-        # TODO: Animations
         walk_start_row = 3
         walk_start_column = 12
+
+        VISUAL_SCALE = 3
 
         for column in range(4):
             x = (walk_start_column + column) * self.frame_width
@@ -53,25 +51,21 @@ class DesktopPet(QWidget):
 
             frame = self.sprite_sheet.copy(x, y, self.frame_width, self.frame_height)
 
-            scale = 3
             frame = frame.scaled(
-                self.frame_width * scale,
-                self.frame_height * scale,
+                self.frame_width * VISUAL_SCALE,
+                self.frame_height * VISUAL_SCALE,
                 Qt.KeepAspectRatio,
                 Qt.FastTransformation
             )
 
             self.walk_frames.append(frame)
 
+
         self.current_frame = 0
-
-
-        # Make the window the same size as the image
-        self.resize(self.frame_width * scale, self.frame_height * scale)
 
         self.pet_label = QLabel(self)
         self.pet_label.setPixmap(self.walk_frames[self.current_frame])
-        self.pet_label.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.resize(self.frame_width * VISUAL_SCALE, self.frame_height * VISUAL_SCALE)
 
         # Keep the pet on top of other windows
         self.setWindowFlags(
@@ -79,10 +73,11 @@ class DesktopPet(QWidget):
             Qt.WindowStaysOnTopHint
         )
 
-        # Set the background transparent
+        # Set background transparent, disable clicking transparent part.
         self.setAttribute(Qt.WA_TranslucentBackground)
+        self.pet_label.setAttribute(Qt.WA_TransparentForMouseEvents)
 
-        # Default position
+        # Default starting position
         self.move(100, 100)
 
         # Movement settings
@@ -103,9 +98,8 @@ class DesktopPet(QWidget):
     def update_pet_position(self):
         """Update the pet's position and behavior."""
 
-        if self.is_dragging: return  # Don't move if the pet is being dragged
+        if self.is_dragging: return
 
-        # So pet can't walk off screen
         screen = QApplication.primaryScreen()
         screen_geometry = screen.availableGeometry()
 
@@ -143,8 +137,7 @@ class DesktopPet(QWidget):
                 event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             )
         elif event.button() == Qt.RightButton:
-            self.close()  # Close the pet on right click
-                          # TODO: Implement a more graceful way to close.
+            self.close()  # TODO: Implement a more graceful way to close.
 
 
     def mouseMoveEvent(self, event):
