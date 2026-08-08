@@ -1,3 +1,5 @@
+import sys
+
 from PySide6.QtCore import (
     Qt, QPoint,                                # For window flags
     QTimer                                     # For updating the pet's position and behavior
@@ -26,12 +28,39 @@ class DesktopPet(QWidget):
 
         self.is_dragging = False
 
-        # Load pet image
-        # TODO: Implement sprite sheet stuff
+        # Load sprite sheet for the pet
+        self.sprite_sheet = QPixmap("assets/cat_spritesheet.png")
+        if self.sprite_sheet.isNull():
+            print("Error: Could not load sprite sheet.")
+            sys.exit(1)
+
+        # The current art I'm using is 32x32.
+        self.frame_width = 32
+        self.frame_height = 32
+        self.resize(self.frame_width, self.frame_height)
+
+        # Placeholder frame from the sprite sheet
+        # TODO: Animations
+        row = 4
+        column = 0
+        x = column * self.frame_width
+        y = row * self.frame_height
+        frame = self.sprite_sheet.copy(x, y, self.frame_width, self.frame_height)
+
+        scale = 3
+        frame = frame.scaled(
+            self.frame_width * scale,
+            self.frame_height * scale,
+            Qt.KeepAspectRatio,
+            Qt.FastTransformation
+        )
+
+        # Make the window the same size as the image
+        self.resize(self.frame_width * scale, self.frame_height * scale)
+
         self.pet_label = QLabel(self)
         self.pet_label.setAttribute(Qt.WA_TransparentForMouseEvents)
-        pixmap = QPixmap("assets/cat_spritesheet.png")
-        self.pet_label.setPixmap(pixmap)
+        self.pet_label.setPixmap(frame)
 
         # Keep the pet on top of other windows
         self.setWindowFlags(
@@ -41,9 +70,6 @@ class DesktopPet(QWidget):
 
         # Set the background transparent
         self.setAttribute(Qt.WA_TranslucentBackground)
-
-        # Make the window the same size as the image
-        self.resize(pixmap.size())
 
         # Default position
         self.move(100, 100)
