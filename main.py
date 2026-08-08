@@ -4,7 +4,7 @@ main.py: This will be the main application.
 
 import sys
 
-from PySide6.QtCore import Qt              # For window flags
+from PySide6.QtCore import Qt, QPoint              # For window flags
 from PySide6.QtGui import QPixmap          # For loading images/assets
 from PySide6.QtWidgets import QApplication # For creating the application
 import PySide6.QtWidgets as QtWidgets
@@ -20,6 +20,9 @@ def main():
 
     pet = DesktopPet("Chi")
     pet.show()
+
+    # TEMP: Set size of window
+    pet.resize(100,100)
 
     sys.exit(app.exec())
 

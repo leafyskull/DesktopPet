@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt                               # For window flags
+from PySide6.QtCore import Qt, QPoint                      # For window flags
 from PySide6.QtGui import QPixmap                           # For loading images/assets
 from PySide6.QtWidgets import QApplication, QWidget, QLabel # For creating the application
 
@@ -18,7 +18,9 @@ class DesktopPet(QWidget):
         self.name = name
 
         # Load pet image
+        # TODO: Implement sprite sheet stuff
         self.pet_label = QLabel(self)
+        self.pet_label.setAttribute(Qt.WA_TransparentForMouseEvents)
         pixmap = QPixmap("assets/cat_spritesheet.png")
         self.pet_label.setPixmap(pixmap)
 
@@ -38,6 +40,23 @@ class DesktopPet(QWidget):
         self.move(100, 100)
 
 
+    def mousePressEvent(self, event):
+        """Handle mouse press events for picking up the pet."""
 
+        if event.button() == Qt.LeftButton:
+            self.drag_positon = (
+                event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            )
+        elif event.button() == Qt.RightButton:
+            self.close()  # Close the pet on right click
+                          # TODO: Implement a more graceful way to close.
+
+
+    def mouseMoveEvent(self, event):
+        """Handle mouse move events for dragging the pet."""
+        if event.buttons() & Qt.LeftButton:
+            self.move(
+                event.globalPosition().toPoint() - self.drag_positon
+            )
 
 
