@@ -1,12 +1,12 @@
 from PySide6.QtCore import (
-    Qt, QPoint,                             # For window flags
-    QTimer                                  # For updating the pet's position and behavior
+    Qt, QPoint,                                # For window flags
+    QTimer                                     # For updating the pet's position and behavior
 )
-from PySide6.QtGui import QPixmap           # For loading images/assets
+from PySide6.QtGui import QPixmap, QTransform  # For images/assets and transformations
 from PySide6.QtWidgets import (
     QApplication,
-    QWidget,                                # For creating the application
-    QLabel,                                 # For displaying the pet visuals
+    QWidget,                                   # For creating the application
+    QLabel,                                    # For displaying the pet visuals
     )
 
 
@@ -23,6 +23,8 @@ class DesktopPet(QWidget):
         super().__init__()
 
         self.name = name
+
+        self.is_dragging = False
 
         # Load pet image
         # TODO: Implement sprite sheet stuff
@@ -59,8 +61,25 @@ class DesktopPet(QWidget):
     def update_pet(self):
         """Update the pet's position and behavior."""
 
+        if self.is_dragging: return  # Don't move if the pet is being dragged
+
+        # So pet can't walk off screen
+        screen = QApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+
         # Update position
         new_x = self.x() + (self.speed * self.direction)
+
+        # If we hit the left side, go right
+        if new_x <= screen_geometry.left():
+            new_x = screen_geometry.left()
+            self.direction *= -1
+
+        # If we hit the right side, go left
+        elif new_x + self.width() >= screen_geometry.right():
+            new_x = screen_geometry.right() - self.width()
+            self.direction *= -1
+
         self.move(new_x, self.y())
 
 
@@ -68,6 +87,7 @@ class DesktopPet(QWidget):
         """Handle mouse press events for picking up the pet."""
 
         if event.button() == Qt.LeftButton:
+            self.is_dragging = True
             self.drag_positon = (
                 event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             )
@@ -82,5 +102,11 @@ class DesktopPet(QWidget):
             self.move(
                 event.globalPosition().toPoint() - self.drag_positon
             )
+
+
+    def mouseReleaseEvent(self, event):
+        """Handle mouse release events for dropping the pet."""
+        if event.button() == Qt.LeftButton:
+            self.is_dragging = False
 
 
