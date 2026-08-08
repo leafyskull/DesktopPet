@@ -1,6 +1,13 @@
-from PySide6.QtCore import Qt, QPoint                      # For window flags
-from PySide6.QtGui import QPixmap                           # For loading images/assets
-from PySide6.QtWidgets import QApplication, QWidget, QLabel # For creating the application
+from PySide6.QtCore import (
+    Qt, QPoint,                             # For window flags
+    QTimer                                  # For updating the pet's position and behavior
+)
+from PySide6.QtGui import QPixmap           # For loading images/assets
+from PySide6.QtWidgets import (
+    QApplication,
+    QWidget,                                # For creating the application
+    QLabel,                                 # For displaying the pet visuals
+    )
 
 
 
@@ -38,6 +45,23 @@ class DesktopPet(QWidget):
 
         # Default position
         self.move(100, 100)
+
+        # Movement settings
+        self.speed = 2
+        self.direction = 1 # | 1 = Right | -1 = Left |
+
+        # Update timer
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_pet)
+        self.timer.start(30)  # Update every 30 ms
+
+
+    def update_pet(self):
+        """Update the pet's position and behavior."""
+
+        # Update position
+        new_x = self.x() + (self.speed * self.direction)
+        self.move(new_x, self.y())
 
 
     def mousePressEvent(self, event):
