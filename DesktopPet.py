@@ -16,10 +16,12 @@ from PySide6.QtWidgets import (
 class PetState(Enum):
     """Represents the states the pet can be in."""
     WALKING = "walking"
-    IDLE = "idle"
+    RUNNING = "running"
 
+    IDLE = "idle"
     SITTING_DOWN = "sitting_down"
     STANDING_UP = "standing_up"
+
     REACTING = "reacting"
 
     LAYING_DOWN = "laying_down"
@@ -96,15 +98,18 @@ class DesktopPet(QWidget):
 
     def initialize_all_animations(self):
         """Initializes all animations."""
-        
+
         self.walk_frames = []
         self.idle_frames = []
         self.react_frames = []
         self.laying_down_frames = []
+        self.running_frames = []
+
         self.init_walk_frames()
         self.init_idle_frames()
         self.init_reaction_frames()
         self.init_laying_down_frames()
+        self.init_running_frames()
 
 
     def init_walk_frames(self):
@@ -222,6 +227,37 @@ class DesktopPet(QWidget):
                     return 
 
 
+    def init_running_frames(self):
+        """Initializes the frames for the running animation"""
+        
+        running_start_row = 3
+        running_start_column = 20
+
+        NUM_RUNNING_FRAMES = 8
+        initialized_frame_count = 0
+
+        for row in range(2):
+            for column in range(4):
+                x = (running_start_column + column) * self.frame_width
+                y = (running_start_row + row) * self.frame_height
+
+                frame = self.sprite_sheet.copy(x, y, self.frame_width, self.frame_height)
+
+                frame = frame.scaled(
+                    self.frame_width * self.VISUAL_SCALE,
+                    self.frame_height * self.VISUAL_SCALE,
+                    Qt.KeepAspectRatio,
+                    Qt.FastTransformation
+                )
+
+                self.running_frames.append(frame)
+
+                initialized_frame_count += 1
+
+                if initialized_frame_count >= NUM_RUNNING_FRAMES:
+                    return 
+
+
     def update_pet(self):
         """Update the pet's state and position."""
 
@@ -234,8 +270,19 @@ class DesktopPet(QWidget):
             self.update_walking()
 
             # After about 5 seconds, stop walking
-            if self.state_timer >= 167:
+            if self.state_timer >= 200:
                 nextAction = random.randint(0, 1) # | 0 = SITTING_DOWN | 1 = GETTING_DOWN_TO_LAY_DOWN
+
+                if nextAction == 0: self.change_state(PetState.SITTING_DOWN)
+                if nextAction == 1: self.change_state(PetState.GETTING_DOWN_TO_LAY_DOWN)
+
+        #### RUNNING STATE ####
+        elif self.state == PetState.RUNNING:
+            self.update_running()
+
+            # After about 5 seconds, stop running
+            if self.state_timer >= 200:
+                nextAction = random.randint(0, 1)
 
                 if nextAction == 0: self.change_state(PetState.SITTING_DOWN)
                 if nextAction == 1: self.change_state(PetState.GETTING_DOWN_TO_LAY_DOWN)
@@ -265,6 +312,15 @@ class DesktopPet(QWidget):
 
             self.display_frame(self.walk_frames[self.current_frame])
 
+        #### RUNNING ####
+        elif self.state == PetState.RUNNING:
+            self.current_frame += 1
+
+            if self.current_frame >= len(self.running_frames):
+                self.current_frame = 0
+
+            self.display_frame(self.running_frames[self.current_frame])
+
         #### SITTING DOWN ####
         elif self.state == PetState.SITTING_DOWN:
             self.display_frame(self.idle_frames[self.current_frame])
@@ -285,7 +341,9 @@ class DesktopPet(QWidget):
             self.current_frame -= 1
 
             if self.current_frame < 0:
-                self.change_state(PetState.WALKING) 
+                randomValue = random.randint(0, 1)
+                if randomValue == 0: self.change_state(PetState.WALKING) 
+                elif randomValue == 1: self.change_state(PetState.RUNNING)
 
         #### REACTING ####
         elif self.state == PetState.REACTING:
@@ -316,7 +374,9 @@ class DesktopPet(QWidget):
             self.current_frame -= 1
 
             if self.current_frame < 0:
-                self.change_state(PetState.WALKING)
+                randomValue = random.randint(0, 1)
+                if randomValue == 0: self.change_state(PetState.WALKING) 
+                elif randomValue == 1: self.change_state(PetState.RUNNING)
 
 
     def update_walking(self):
@@ -340,6 +400,27 @@ class DesktopPet(QWidget):
 
         self.move(new_x, self.y())
 
+    def update_running(self):
+        """Update the running animation."""
+        
+        screen = QApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+
+        # Update position
+        new_x = self.x() + (self.speed * 2 * self.direction)
+
+        # If we hit the left side, go right
+        if new_x <= screen_geometry.left():
+            new_x = screen_geometry.left()
+            self.direction *= -1
+
+        # If we hit the right side, go left
+        elif new_x + self.width() >= screen_geometry.right():
+            new_x = screen_geometry.right() - self.width()
+            self.direction *= -1
+
+        self.move(new_x, self.y())
+
 
     def change_state(self, new_state):
         """Resets the state timer and changes state."""
@@ -347,10 +428,10 @@ class DesktopPet(QWidget):
         self.state = new_state
         self.state_timer = 0
 
-        if new_state == PetState.WALKING:
+        if new_state == PetState.WALKING or new_state == PetState.RUNNING:
             self.current_frame = 0
 
-            # Walk for around 2-6 seconds
+            # Walk/run for around 2-6 seconds
             self.state_duration = random.randint(70, 200)
 
             # Randomly choose left or right
