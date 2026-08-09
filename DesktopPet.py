@@ -44,6 +44,10 @@ class DesktopPet(QWidget):
 
         self.change_state(PetState.IDLE)
 
+        # Movement settings
+        self.speed = 2
+        self.direction = -1 # | 1 = Right | -1 = Left |
+
         # Load sprite sheet for the pet
         self.sprite_sheet = QPixmap("assets/cat_spritesheet.png")
         if self.sprite_sheet.isNull():
@@ -55,19 +59,12 @@ class DesktopPet(QWidget):
 
         self.VISUAL_SCALE = 3
 
-        self.walk_frames = []
-        self.idle_frames = []
-        self.react_frames = []
-        self.laying_down_frames = []
-        self.init_walk_frames()
-        self.init_idle_frames()
-        self.init_reaction_frames()
-        self.init_laying_down_frames()
+        self.initialize_all_animations()
 
         self.current_frame = 0
 
         self.pet_label = QLabel(self)
-        self.pet_label.setPixmap(self.idle_frames[self.current_frame])
+        self.display_frame(self.idle_frames[self.current_frame])
         self.resize(
             self.frame_width * self.VISUAL_SCALE, 
             self.frame_height * self.VISUAL_SCALE
@@ -86,10 +83,6 @@ class DesktopPet(QWidget):
         # Default starting position
         self.move(100, 100)
 
-        # Movement settings
-        self.speed = 2
-        self.direction = -1 # | 1 = Right | -1 = Left |
-
         # Movement timer
         self.movement_timer = QTimer(self)
         self.movement_timer.timeout.connect(self.update_pet)
@@ -99,6 +92,19 @@ class DesktopPet(QWidget):
         self.animation_timer = QTimer(self)
         self.animation_timer.timeout.connect(self.update_animation)
         self.animation_timer.start(150)
+
+
+    def initialize_all_animations(self):
+        """Initializes all animations."""
+        
+        self.walk_frames = []
+        self.idle_frames = []
+        self.react_frames = []
+        self.laying_down_frames = []
+        self.init_walk_frames()
+        self.init_idle_frames()
+        self.init_reaction_frames()
+        self.init_laying_down_frames()
 
 
     def init_walk_frames(self):
@@ -257,11 +263,11 @@ class DesktopPet(QWidget):
             if self.current_frame >= len(self.walk_frames):
                 self.current_frame = 0
 
-            self.pet_label.setPixmap(self.walk_frames[self.current_frame])
+            self.display_frame(self.walk_frames[self.current_frame])
 
         #### SITTING DOWN ####
         elif self.state == PetState.SITTING_DOWN:
-            self.pet_label.setPixmap(self.idle_frames[self.current_frame])
+            self.display_frame(self.idle_frames[self.current_frame])
 
             self.current_frame += 1
 
@@ -270,11 +276,11 @@ class DesktopPet(QWidget):
 
         #### IDLE ####
         elif self.state == PetState.IDLE:
-            self.pet_label.setPixmap(self.idle_frames[-1])
+            self.display_frame(self.idle_frames[-1])
 
         #### STANDING UP ####
         elif self.state == PetState.STANDING_UP:
-            self.pet_label.setPixmap(self.idle_frames[self.current_frame])
+            self.display_frame(self.idle_frames[self.current_frame])
 
             self.current_frame -= 1
 
@@ -283,7 +289,7 @@ class DesktopPet(QWidget):
 
         #### REACTING ####
         elif self.state == PetState.REACTING:
-            self.pet_label.setPixmap(self.react_frames[self.current_frame])
+            self.display_frame(self.react_frames[self.current_frame])
 
             self.current_frame += 1
 
@@ -292,7 +298,7 @@ class DesktopPet(QWidget):
 
         #### GETTING DOWN TO LAY DOWN ####
         elif self.state == PetState.GETTING_DOWN_TO_LAY_DOWN:
-            self.pet_label.setPixmap(self.laying_down_frames[self.current_frame])
+            self.display_frame(self.laying_down_frames[self.current_frame])
 
             self.current_frame += 1
 
@@ -301,11 +307,11 @@ class DesktopPet(QWidget):
 
         #### LAYING DOWN ####
         elif self.state == PetState.LAYING_DOWN:
-            self.pet_label.setPixmap(self.laying_down_frames[-1])
+            self.display_frame(self.laying_down_frames[-1])
 
         #### GETTING UP FROM LAYING DOWN ####
         elif self.state == PetState.GETTING_UP_FROM_LAYING_DOWN:
-            self.pet_label.setPixmap(self.laying_down_frames[self.current_frame])
+            self.display_frame(self.laying_down_frames[self.current_frame])
 
             self.current_frame -= 1
 
@@ -372,6 +378,15 @@ class DesktopPet(QWidget):
             self.state_duration = random.randint(70, 170)
 
 
+    def display_frame(self, frame):
+        """Displays the requested frame, and sets the direction."""
+
+        if self.direction == 1: # RIGHT
+            frame = frame.transformed(QTransform().scale(-1, 1))
+        elif self.direction == -1: # LEFT
+            frame = frame.transformed(QTransform().scale(1, 1))
+
+        self.pet_label.setPixmap(frame)
 
 
 

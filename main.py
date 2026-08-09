@@ -18,7 +18,7 @@ def main():
     # Create the application
     app = QApplication(sys.argv)
 
-    pet = DesktopPet("Chi")
+    pet = DesktopPet("ChiChi")
     pet.show()
 
     sys.exit(app.exec())
