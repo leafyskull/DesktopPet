@@ -21,9 +21,6 @@ def main():
     pet = DesktopPet("Chi")
     pet.show()
 
-    # TEMP: Set size of window
-    pet.resize(100,100)
-
     sys.exit(app.exec())
 
 

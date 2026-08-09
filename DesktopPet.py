@@ -1,6 +1,6 @@
 import sys
-from enum import Enum
-
+from enum import Enum                          # For PetState
+import random                                  # For randomly selecting states
 from PySide6.QtCore import (
     Qt, QPoint,                                # For window flags
     QTimer                                     # For updating the pet's position and behavior
@@ -19,6 +19,7 @@ class PetState(Enum):
     IDLE = "idle"
     SITTING_DOWN = "sitting_down"
     STANDING_UP = "standing_up"
+    REACTING = "reacting"
 
 
 """
@@ -32,10 +33,11 @@ class DesktopPet(QWidget):
 
         super().__init__()
         self.name = name
-        self.is_dragging = False
 
-        self.state = PetState.IDLE
-        self.state_timer = 0
+        self.is_dragging = False
+        self.drag_start_position = 0
+
+        self.change_state(PetState.IDLE)
 
         # Load sprite sheet for the pet
         self.sprite_sheet = QPixmap("assets/cat_spritesheet.png")
@@ -50,8 +52,10 @@ class DesktopPet(QWidget):
 
         self.walk_frames = []
         self.idle_frames = []
+        self.react_frames = []
         self.init_walk_frames()
         self.init_idle_frames()
+        self.init_react_frames()
 
         self.current_frame = 0
 
@@ -91,6 +95,7 @@ class DesktopPet(QWidget):
 
 
     def init_walk_frames(self):
+        """Initializes the frames for the walking animation."""
 
         walk_start_row = 3
         walk_start_column = 12
@@ -112,28 +117,68 @@ class DesktopPet(QWidget):
 
 
     def init_idle_frames(self):
+        """Initializes the frames for the idle animation."""
 
         idle_start_row = 3
         idle_start_column = 0
 
-        for column in range(4):
-            x = (idle_start_column + column) * self.frame_width
-            y = idle_start_row * self.frame_height
+        NUM_IDLE_FRAMES = 6
+        initialized_frame_count = 0
 
-            frame = self.sprite_sheet.copy(x, y, self.frame_width, self.frame_height)
+        for row in range(2):
+            for column in range(4):
+                x = (idle_start_column + column) * self.frame_width
+                y = (idle_start_row + row) * self.frame_height
 
-            frame = frame.scaled(
-                self.frame_width * self.VISUAL_SCALE,
-                self.frame_height * self.VISUAL_SCALE,
-                Qt.KeepAspectRatio,
-                Qt.FastTransformation
-            )
+                frame = self.sprite_sheet.copy(x, y, self.frame_width, self.frame_height)
 
-            self.idle_frames.append(frame)
+                frame = frame.scaled(
+                    self.frame_width * self.VISUAL_SCALE,
+                    self.frame_height * self.VISUAL_SCALE,
+                    Qt.KeepAspectRatio,
+                    Qt.FastTransformation
+                )
+
+                self.idle_frames.append(frame)
+
+                initialized_frame_count += 1
+                
+                if initialized_frame_count >= NUM_IDLE_FRAMES:
+                    return 
+
+
+    def init_react_frames(self):
+        react_start_row = 3
+        react_start_column = 4
+
+        NUM_REACT_FRAMES = 5
+        initialized_frame_count = 0
+
+        for row in range(2):
+            for column in range(4):
+                x = (react_start_column + column) * self.frame_width
+                y = (react_start_row + row) * self.frame_height
+
+                frame = self.sprite_sheet.copy(x, y, self.frame_width, self.frame_height)
+
+                frame = frame.scaled(
+                    self.frame_width * self.VISUAL_SCALE,
+                    self.frame_height * self.VISUAL_SCALE,
+                    Qt.KeepAspectRatio,
+                    Qt.FastTransformation
+                )
+
+                self.react_frames.append(frame)
+
+                initialized_frame_count += 1
+
+                if initialized_frame_count >= NUM_REACT_FRAMES:
+                    return 
+
 
 
     def update_pet(self):
-        """Update the pet's position."""
+        """Update the pet's state and position."""
 
         if self.is_dragging: return
 
@@ -155,6 +200,7 @@ class DesktopPet(QWidget):
 
 
     def update_animation(self):
+        """Updates the current animation's frames."""
 
         #### WALKING ####
         if self.state == PetState.WALKING:
@@ -185,11 +231,20 @@ class DesktopPet(QWidget):
             self.current_frame -= 1
 
             if self.current_frame < 0:
-                self.change_state(PetState.WALKING)
+                self.change_state(PetState.WALKING) 
 
+        #### REACTING ####
+        elif self.state == PetState.REACTING:
+            self.pet_label.setPixmap(self.react_frames[self.current_frame])
+
+            self.current_frame += 1
+
+            if self.current_frame >= len(self.react_frames):
+                self.change_state(PetState.IDLE)
 
 
     def update_walking(self):
+        """Update the walking animation."""
 
         screen = QApplication.primaryScreen()
         screen_geometry = screen.availableGeometry()
@@ -209,13 +264,35 @@ class DesktopPet(QWidget):
 
         self.move(new_x, self.y())
 
+
     def change_state(self, new_state):
+        """Resets the state timer and changes state."""
+
         self.state = new_state
         self.state_timer = 0
 
-        if new_state == PetState.STANDING_UP:
+        if new_state == PetState.WALKING:
+            self.current_frame = 0
+
+            # Walk for around 2-6 seconds
+            self.state_duration = random.randint(70, 200)
+
+            # Randomly choose left or right
+            self.direction = random.choice([-1, 1])
+
+        elif new_state == PetState.SITTING_DOWN:
+                    self.current_frame = 0
+
+        elif new_state == PetState.STANDING_UP:
             self.current_frame = len(self.idle_frames) - 1
-        else:
+
+            # Sit for roughly 2-5 seconds
+            self.state_duration = random.randint(70, 170)
+
+        elif new_state == PetState.STANDING_UP:
+            self.current_frame = len(self.idle_frames) - 1
+
+        elif new_state == PetState.REACTING:
             self.current_frame = 0
 
 
@@ -226,11 +303,17 @@ class DesktopPet(QWidget):
 
     def mousePressEvent(self, event):
         """Handle mouse press events for picking up the pet."""
+
         if event.button() == Qt.LeftButton:
+
             self.is_dragging = True
+
+            self.drag_start_position = event.globalPosition().toPoint()
+
             self.drag_positon = (
                 event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             )
+
         elif event.button() == Qt.RightButton:
             self.close()  # TODO: Implement a more graceful way to close.
 
@@ -243,7 +326,16 @@ class DesktopPet(QWidget):
 
     def mouseReleaseEvent(self, event):
         """Handle mouse release events for dropping the pet."""
+
         if event.button() == Qt.LeftButton:
+
             self.is_dragging = False
+
+            release_position = event.globalPosition().toPoint()
+
+            distance = (release_position - self.drag_start_position).manhattanLength()
+
+            if distance < 5:
+                self.change_state(PetState.REACTING)
 
 
