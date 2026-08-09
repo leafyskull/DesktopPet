@@ -12,15 +12,15 @@ from PySide6.QtWidgets import (
     QLabel,                                    # For displaying the pet visuals
     )
 
-
 class PetState(Enum):
     """Represents the states the pet can be in."""
+
     WALKING = "walking"
     RUNNING = "running"
 
     IDLE = "idle"
-    SITTING_DOWN = "sitting_down"
-    STANDING_UP = "standing_up"
+    SITTING_DOWN = "sitting_down"  # Sitting down into idle
+    STANDING_UP = "standing_up"    # Standing up from idle
 
     REACTING = "reacting"
 
@@ -97,19 +97,19 @@ class DesktopPet(QWidget):
 
 
     def initialize_all_animations(self):
-        """Initializes all animations."""
+            """Initializes all animations."""
 
-        self.walk_frames = []
-        self.idle_frames = []
-        self.react_frames = []
-        self.laying_down_frames = []
-        self.running_frames = []
+            self.walk_frames = []
+            self.idle_frames = []
+            self.react_frames = []
+            self.laying_down_frames = []
+            self.running_frames = []
 
-        self.init_walk_frames()
-        self.init_idle_frames()
-        self.init_reaction_frames()
-        self.init_laying_down_frames()
-        self.init_running_frames()
+            self.init_walk_frames()
+            self.init_idle_frames()
+            self.init_reaction_frames()
+            self.init_laying_down_frames()
+            self.init_running_frames()
 
 
     def init_walk_frames(self):
