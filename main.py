@@ -9,7 +9,7 @@ from PySide6.QtGui import QPixmap          # For loading images/assets
 from PySide6.QtWidgets import QApplication # For creating the application
 import PySide6.QtWidgets as QtWidgets
 
-from DesktopPet import DesktopPet
+from desktop_pet import DesktopPet
 
 
 
@@ -22,12 +22,6 @@ def main():
     pet.show()
 
     sys.exit(app.exec())
-
-
-
-
-
-
 
 
 
