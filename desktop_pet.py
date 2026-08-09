@@ -1,5 +1,4 @@
-import sys
-from enum import Enum                          # For PetState
+import sys                         # For PetState
 import random                                  # For randomly selecting states
 from PySide6.QtCore import (
     Qt, QPoint,                                # For window flags
@@ -12,23 +11,7 @@ from PySide6.QtWidgets import (
     QLabel,                                    # For displaying the pet visuals
 )
 from init_animations import Init_Animations
-
-class PetState(Enum):
-    """Represents the states the pet can be in."""
-
-    WALKING = "walking"
-    RUNNING = "running"
-
-    IDLE = "idle"
-    SITTING_DOWN = "sitting_down"  # Sitting down into idle
-    STANDING_UP = "standing_up"    # Standing up from idle
-
-    REACTING = "reacting"
-
-    LAYING_DOWN = "laying_down"
-    GETTING_DOWN_TO_LAY_DOWN = "getting_down_to_lay_down"
-    GETTING_UP_FROM_LAYING_DOWN = "getting_up_from_laying_down"
-
+from pet_state import PetState
 
 """
 Class for the desktop pet.

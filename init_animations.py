@@ -1,155 +1,80 @@
-from enum import Enum                          # For PetState
 from PySide6.QtCore import Qt
+from pet_state import PetState
 
 
 class Init_Animations:
 
+    # This is used to choose the angle of the cat from the spritesheet.
+    # 4 = front/side
+    # 5 = side
+    START_ROW = 5
+
     def initialize_all_animations(self, pet: DesktopPet):
         """Initializes all animations."""
+        
+        pet.walk_frames = self.init_frames_for_animation(self, pet, PetState.WALKING)
+        pet.idle_frames = self.init_frames_for_animation(self, pet, PetState.IDLE)
+        pet.react_frames = self.init_frames_for_animation(self, pet, PetState.REACTING)
+        pet.laying_down_frames = self.init_frames_for_animation(self, pet, PetState.LAYING_DOWN)
+        pet.running_frames = self.init_frames_for_animation(self, pet, PetState.RUNNING)
 
-        self.init_walk_frames(self, pet)
-        self.init_idle_frames(self, pet)
-        self.init_reaction_frames(self, pet)
-        self.init_laying_down_frames(self, pet)
-        self.init_running_frames(self, pet)
+        
+    def get_start_col_for_state(pet_state: PetState) -> int:
+        """Returns the starting column in the spritesheet for a given pet"""
+        pet_state_to_col_dict = {
+            PetState.WALKING: 12,
+            PetState.IDLE: 0,
+            PetState.REACTING: 4,
+            PetState.LAYING_DOWN: 8,
+            PetState.RUNNING: 20
+        }
 
-    def init_walk_frames(self, pet: DesktopPet):
-        """Initializes the frames for the walking animation."""
+        return pet_state_to_col_dict[pet_state]
 
-        walk_start_row = 3
-        walk_start_column = 12
 
-        for column in range(4):
-            x = (walk_start_column + column) * pet.frame_width
-            y = walk_start_row * pet.frame_height
+    def get_num_frames_for_state(pet_state: PetState) -> int:
+        """Returns the number of frames in an animation for a given state."""
+        pet_state_to_num_frames_dict = {
+            PetState.WALKING: 4,
+            PetState.IDLE: 6,
+            PetState.REACTING: 5,
+            PetState.LAYING_DOWN: 8,
+            PetState.RUNNING: 8
+        }
 
-            frame = pet.sprite_sheet.copy(x, y, pet.frame_width, pet.frame_height)
+        return pet_state_to_num_frames_dict[pet_state]
 
-            frame = frame.scaled(
-                pet.frame_width * pet.VISUAL_SCALE,
-                pet.frame_height * pet.VISUAL_SCALE,
-                Qt.KeepAspectRatio,
-                Qt.FastTransformation
-            )
 
-            pet.walk_frames.append(frame)
+    def init_frames_for_animation(self, pet: DesktopPet, pet_state: PetState):
+        """Initializes the frames for a given animation."""
 
-    def init_idle_frames(self, pet: DesktopPet):
-        """Initializes the frames for the idle animation."""
+        anim_start_row = self.START_ROW
+        anim_start_col = self.get_start_col_for_state(pet_state)
 
-        idle_start_row = 3
-        idle_start_column = 0
+        anim_frames = []
 
-        NUM_IDLE_FRAMES = 6
+        NUM_ANIM_FRAMES = self.get_num_frames_for_state(pet_state)
         initialized_frame_count = 0
 
         for row in range(2):
-            for column in range(4):
-                x = (idle_start_column + column) * pet.frame_width
-                y = (idle_start_row + row) * pet.frame_height
-
+            for col in range(4):
+                x = (anim_start_col + col) * pet.frame_width
+                y = (anim_start_row + row) * pet.frame_height
+    
                 frame = pet.sprite_sheet.copy(x, y, pet.frame_width, pet.frame_height)
-
+    
                 frame = frame.scaled(
                     pet.frame_width * pet.VISUAL_SCALE,
                     pet.frame_height * pet.VISUAL_SCALE,
                     Qt.KeepAspectRatio,
                     Qt.FastTransformation
                 )
-
-                pet.idle_frames.append(frame)
-
-                initialized_frame_count += 1
-
-                if initialized_frame_count >= NUM_IDLE_FRAMES:
-                    return
-
-    def init_reaction_frames(self, pet: DesktopPet):
-        """Initializes the frames for the reacting state"""
-
-        react_start_row = 3
-        react_start_column = 4
-
-        NUM_REACT_FRAMES = 5
-        initialized_frame_count = 0
-
-        for row in range(2):
-            for column in range(4):
-                x = (react_start_column + column) * pet.frame_width
-                y = (react_start_row + row) * pet.frame_height
-
-                frame = pet.sprite_sheet.copy(x, y, pet.frame_width, pet.frame_height)
-
-                frame = frame.scaled(
-                    pet.frame_width * pet.VISUAL_SCALE,
-                    pet.frame_height * pet.VISUAL_SCALE,
-                    Qt.KeepAspectRatio,
-                    Qt.FastTransformation
-                )
-
-                pet.react_frames.append(frame)
+    
+                anim_frames.append(frame)
 
                 initialized_frame_count += 1
+                
+                if initialized_frame_count >= NUM_ANIM_FRAMES:
+                    return anim_frames
 
-                if initialized_frame_count >= NUM_REACT_FRAMES:
-                    return
-
-    def init_laying_down_frames(self, pet: DesktopPet):
-        """Initializes the frames for the laying down animation"""
-
-        laying_down_start_row = 3
-        laying_down_start_column = 8
-
-        NUM_LAYING_DOWN_FRAMES = 8
-        initialized_frame_count = 0
-
-        for row in range(2):
-            for column in range(4):
-                x = (laying_down_start_column + column) * pet.frame_width
-                y = (laying_down_start_row + row) * pet.frame_height
-
-                frame = pet.sprite_sheet.copy(x, y, pet.frame_width, pet.frame_height)
-
-                frame = frame.scaled(
-                    pet.frame_width * pet.VISUAL_SCALE,
-                    pet.frame_height * pet.VISUAL_SCALE,
-                    Qt.KeepAspectRatio,
-                    Qt.FastTransformation
-                )
-
-                pet.laying_down_frames.append(frame)
-
-                initialized_frame_count += 1
-
-                if initialized_frame_count >= NUM_LAYING_DOWN_FRAMES:
-                    return
-
-    def init_running_frames(self, pet: DesktopPet):
-        """Initializes the frames for the running animation"""
-
-        running_start_row = 3
-        running_start_column = 20
-
-        NUM_RUNNING_FRAMES = 8
-        initialized_frame_count = 0
-
-        for row in range(2):
-            for column in range(4):
-                x = (running_start_column + column) * pet.frame_width
-                y = (running_start_row + row) * pet.frame_height
-
-                frame = pet.sprite_sheet.copy(x, y, pet.frame_width, pet.frame_height)
-
-                frame = frame.scaled(
-                    pet.frame_width * pet.VISUAL_SCALE,
-                    pet.frame_height * pet.VISUAL_SCALE,
-                    Qt.KeepAspectRatio,
-                    Qt.FastTransformation
-                )
-
-                pet.running_frames.append(frame)
-
-                initialized_frame_count += 1
-
-                if initialized_frame_count >= NUM_RUNNING_FRAMES:
-                    return 
+        return anim_frames
