@@ -76,7 +76,8 @@ class DesktopPet(QWidget):
         self.pet_label.setAttribute(Qt.WA_TransparentForMouseEvents)
 
         # Default starting position
-        self.move(100, 100)
+        #self.move(100, 100)
+        self.calculate_spawn_position_and_spawn_there()
 
         # Movement timer
         self.movement_timer = QTimer(self)
@@ -87,6 +88,18 @@ class DesktopPet(QWidget):
         self.animation_timer = QTimer(self)
         self.animation_timer.timeout.connect(self.update_animation)
         self.animation_timer.start(150)
+
+
+    def calculate_spawn_position_and_spawn_there(self):
+        #self.move(100, 100)
+
+        screen = QApplication.primaryScreen()
+        available = screen.availableGeometry()
+
+        x = 100
+        y = available.bottom() - self.height() + 24
+
+        self.move(x, y)
 
 
     def update_pet(self):
